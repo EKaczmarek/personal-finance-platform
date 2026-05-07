@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Docker
+postgres-data/
+
+# Data
+data/raw/
+data/exports/
+
+# IDE
+.vscode/
+.idea/
