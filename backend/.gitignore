@@ -583,3 +583,23 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/dotnet,csharp,visualstudio
+
+# ── Secrets & local configuration ────────────────────────────────────────────
+# Environment-specific settings that may contain passwords / connection strings
+appsettings.Development.json
+appsettings.*.json
+# Keep the base file (no real secrets) and the example
+!appsettings.json
+!appsettings.Example.json
+
+# .NET user-secrets (stored in %APPDATA%\Microsoft\UserSecrets\ but belt-and-suspenders)
+secrets.json
+
+# Environment variable files
+.env
+.env.*
+!.env.example
+
+# Podman / Docker compose overrides with real credentials
+podman-compose.override.yml
+docker-compose.override.yml
