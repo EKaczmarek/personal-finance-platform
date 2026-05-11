@@ -1,0 +1,96 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Transactions</h1>
+    <div class="header-actions">
+      <a mat-stroked-button routerLink="/dashboard">← Dashboard</a>
+      <button mat-flat-button color="primary" (click)="showForm.set(!showForm())">
+        {{ showForm() ? 'Cancel' : '+ Add transaction' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Month</mat-label>
+      <mat-select [value]="selectedMonth()" (valueChange)="onMonthChange($event)">
+        @for (m of months; track m.value) {
+          <mat-option [value]="m.value">{{ m.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Year</mat-label>
+      <input matInput type="number" [value]="selectedYear()" (change)="onYearChange(+$any($event.target).value)" />
+    </mat-form-field>
+  </div>
+
+  @if (showForm()) {
+    <mat-card class="add-form-card">
+      <mat-card-header><mat-card-title>New transaction</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="addForm" (ngSubmit)="submit()" class="add-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Description</mat-label>
+            <input matInput formControlName="description" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Amount</mat-label>
+            <input matInput type="number" formControlName="amount" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Type</mat-label>
+            <mat-select formControlName="type">
+              <mat-option value="Income">Income</mat-option>
+              <mat-option value="Expense">Expense</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Account ID</mat-label>
+            <input matInput formControlName="accountId" placeholder="Paste account GUID" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Category ID</mat-label>
+            <input matInput formControlName="categoryId" placeholder="Paste category GUID" />
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="submitting() || addForm.invalid">
+            {{ submitting() ? 'Saving...' : 'Save' }}
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else if (filtered().length === 0) {
+    <mat-card><mat-card-content><p class="empty">No transactions found.</p></mat-card-content></mat-card>
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        @for (tx of filtered(); track tx.id) {
+          <div class="tx-row">
+            <div class="tx-info">
+              <span class="tx-desc">{{ tx.description }}</span>
+              <span class="tx-meta">{{ tx.categoryName }} · {{ tx.accountName }} · {{ tx.occurredAt | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="tx-right">
+              <span class="tx-amount" [class.income]="tx.type === 'Income'" [class.expense]="tx.type === 'Expense'">
+                {{ tx.type === 'Income' ? '+' : '-' }}{{ tx.amount | currency:'PLN':'symbol':'1.2-2' }}
+              </span>
+              <button mat-icon-button color="warn" (click)="delete(tx.id)" title="Delete">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+          <mat-divider />
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

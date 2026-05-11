@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using FluentValidation;
 
 namespace FinanceTracker.API.Middleware;
 
@@ -10,6 +11,16 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         try
         {
             await next(context);
+        }
+        catch (ValidationException ex)
+        {
+            var errors = ex.Errors.Select(e => new { e.PropertyName, e.ErrorMessage });
+            await WriteErrorAsync(context, HttpStatusCode.BadRequest, "Validation Failed",
+                JsonSerializer.Serialize(errors));
+        }
+        catch (InvalidOperationException ex)
+        {
+            await WriteErrorAsync(context, HttpStatusCode.Conflict, "Conflict", ex.Message);
         }
         catch (KeyNotFoundException ex)
         {

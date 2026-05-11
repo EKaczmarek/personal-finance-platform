@@ -1,0 +1,73 @@
+<div class="dashboard">
+  <div class="dashboard-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p>{{ currentMonth }}</p>
+    </div>
+    <div class="header-actions">
+      <span>Hello, {{ auth.currentUser()?.firstName }}</span>
+      <button mat-stroked-button routerLink="/transactions">Transactions</button>
+      <button mat-stroked-button routerLink="/budgets">Budgets</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p>Loading...</p>
+  } @else {
+    <div class="kpi-grid">
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <p class="kpi-label">Balance</p>
+          <p class="kpi-value" [class.positive]="balance() >= 0" [class.negative]="balance() < 0">
+            {{ balance() | currency:'PLN':'symbol':'1.2-2' }}
+          </p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <p class="kpi-label">Income</p>
+          <p class="kpi-value positive">{{ totalIncome() | currency:'PLN':'symbol':'1.2-2' }}</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <p class="kpi-label">Expenses</p>
+          <p class="kpi-value negative">{{ totalExpenses() | currency:'PLN':'symbol':'1.2-2' }}</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <p class="kpi-label">Transactions</p>
+          <p class="kpi-value">{{ transactions().length }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <mat-card class="recent-card">
+      <mat-card-header>
+        <mat-card-title>Recent transactions</mat-card-title>
+        <a mat-button routerLink="/transactions">View all</a>
+      </mat-card-header>
+      <mat-card-content>
+        @if (recentTransactions().length === 0) {
+          <p class="empty">No transactions this month. <a routerLink="/transactions">Add one</a></p>
+        } @else {
+          @for (tx of recentTransactions(); track tx.id) {
+            <div class="tx-row">
+              <div class="tx-info">
+                <span class="tx-desc">{{ tx.description }}</span>
+                <span class="tx-meta">{{ tx.categoryName }} · {{ tx.occurredAt | date:'dd MMM' }}</span>
+              </div>
+              <span class="tx-amount" [class.income]="tx.type === 'Income'" [class.expense]="tx.type === 'Expense'">
+                {{ tx.type === 'Income' ? '+' : '-' }}{{ tx.amount | currency:'PLN':'symbol':'1.2-2' }}
+              </span>
+            </div>
+          }
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

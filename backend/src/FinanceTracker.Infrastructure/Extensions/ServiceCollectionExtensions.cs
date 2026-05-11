@@ -1,6 +1,8 @@
+using FinanceTracker.Application.Common.Interfaces;
 using FinanceTracker.Domain.Interfaces;
 using FinanceTracker.Infrastructure.Persistence;
 using FinanceTracker.Infrastructure.Repositories;
+using FinanceTracker.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +25,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IBudgetRepository, BudgetRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         return services;
     }

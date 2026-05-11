@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using FinanceTracker.API.Extensions;
 using FinanceTracker.Application.Accounts.Commands.CreateAccount;
 using FinanceTracker.Application.Accounts.Queries.GetAccounts;
 using MediatR;
@@ -6,21 +8,21 @@ namespace FinanceTracker.API.Endpoints;
 
 public static class AccountEndpoints
 {
-    private static readonly Guid DevUserId = Guid.Parse("00000000-0000-0000-0000-000000000001");
-
     public static IEndpointRouteBuilder MapAccountEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/v1/accounts").WithTags("Accounts");
+        var group = app.MapGroup("/api/v1/accounts")
+            .WithTags("Accounts")
+            .RequireAuthorization();
 
-        group.MapGet("/", async (IMediator mediator) =>
+        group.MapGet("/", async (IMediator mediator, ClaimsPrincipal user) =>
         {
-            var result = await mediator.Send(new GetAccountsQuery(DevUserId));
+            var result = await mediator.Send(new GetAccountsQuery(user.GetUserId()));
             return Results.Ok(result);
         });
 
-        group.MapPost("/", async (IMediator mediator, CreateAccountCommand command) =>
+        group.MapPost("/", async (IMediator mediator, ClaimsPrincipal user, CreateAccountCommand command) =>
         {
-            var cmd = command with { UserId = DevUserId };
+            var cmd = command with { UserId = user.GetUserId() };
             var result = await mediator.Send(cmd);
             return Results.Created($"/api/v1/accounts/{result.Id}", result);
         });

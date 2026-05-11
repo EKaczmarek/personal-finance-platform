@@ -1,25 +1,31 @@
+using System.Text;
 using FinanceTracker.API.Endpoints;
 using FinanceTracker.API.Middleware;
+using FinanceTracker.Application.Common.Behaviors;
 using FinanceTracker.Application.Mapping;
 using FinanceTracker.Infrastructure.Extensions;
+using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Infrastructure (EF Core + repositories)
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// MediatR — scan Application assembly
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(MappingProfile).Assembly));
+{
+    cfg.RegisterServicesFromAssembly(typeof(MappingProfile).Assembly);
+    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+});
 
-// AutoMapper
 builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
 
-// OpenAPI
+builder.Services.AddValidatorsFromAssembly(typeof(MappingProfile).Assembly);
+
 builder.Services.AddOpenApi();
 
-// CORS (allow Angular dev server)
 builder.Services.AddCors(options =>
     options.AddPolicy("DevCors", p =>
         p.WithOrigins("http://localhost:4200")
@@ -27,7 +33,22 @@ builder.Services.AddCors(options =>
          .AllowAnyMethod()
          .AllowCredentials()));
 
-// Auth (JWT added in Day 6 — placeholder)
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -40,20 +61,18 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("DevCors");
+app.UseAuthentication();
 app.UseAuthorization();
 
-// Global exception handler
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Health check
 app.MapGet("/healthz", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
    .WithTags("Health");
 
-// Endpoint groups
+app.MapAuthEndpoints();
 app.MapTransactionEndpoints();
 app.MapAccountEndpoints();
 
 app.Run();
 
-// Needed for WebApplicationFactory in integration tests
 public partial class Program;
